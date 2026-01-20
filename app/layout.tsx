@@ -2,7 +2,7 @@ import './globals.css'
 import { AuthProvider } from './components/AuthProvider'
 
 export const metadata = {
-  title: 'USC Dining Ratings',
+  title: 'USC RateMyPlate',
   description: 'Rate USC dining hall meals',
 }
 

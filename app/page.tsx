@@ -2,6 +2,9 @@ import { supabase } from '@/lib/supabase'
 import DishCard from './components/DishCard'
 import UserNav from './components/UserNav'
 
+// Disable caching so ratings update on refresh
+export const dynamic = 'force-dynamic'
+
 interface MenuItem {
   id: string
   name: string
@@ -14,6 +17,8 @@ interface MenuItem {
       slug: string
     }
   }
+  averageRating: number
+  ratingCount: number
 }
 
 const DINING_HALLS = [
@@ -45,6 +50,32 @@ export default async function Home() {
     return <div className="p-8 text-red-600">Error loading menu: {error.message}</div>
   }
 
+  // Fetch ratings for all menu items
+  const menuItemIds = menuItems?.map(item => item.id) || []
+  const { data: ratings } = await supabase
+    .from('ratings')
+    .select('menu_item_id, score')
+    .in('menu_item_id', menuItemIds)
+
+  // Calculate average ratings and counts for each menu item
+  const ratingStats: Record<string, { total: number; count: number }> = {}
+  ratings?.forEach(rating => {
+    if (!ratingStats[rating.menu_item_id]) {
+      ratingStats[rating.menu_item_id] = { total: 0, count: 0 }
+    }
+    ratingStats[rating.menu_item_id].total += rating.score
+    ratingStats[rating.menu_item_id].count += 1
+  })
+
+  // Add rating data to menu items
+  const menuItemsWithRatings = menuItems?.map(item => ({
+    ...item,
+    averageRating: ratingStats[item.id]
+      ? ratingStats[item.id].total / ratingStats[item.id].count
+      : 0,
+    ratingCount: ratingStats[item.id]?.count || 0
+  })) || []
+
   // Group by dining hall and meal period
   const menuByHall: Record<string, Record<string, MenuItem[]>> = {}
 
@@ -52,7 +83,7 @@ export default async function Home() {
     menuByHall[hall.slug] = { lunch: [], dinner: [] }
   })
 
-  menuItems?.forEach((item: any) => {
+  menuItemsWithRatings.forEach((item: any) => {
     const hallSlug = item.station?.dining_hall?.slug
     if (hallSlug && menuByHall[hallSlug]) {
       menuByHall[hallSlug][item.meal_period]?.push(item)
@@ -65,7 +96,7 @@ export default async function Home() {
       <header className="bg-[#990000] text-white py-6 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold">USC Dining</h1>
+            <h1 className="text-3xl font-bold">USC RateMyPlate</h1>
             <UserNav />
           </div>
           <p className="text-white/80">
@@ -99,8 +130,11 @@ export default async function Home() {
                         {hallMenu.lunch.map(item => (
                           <DishCard
                             key={item.id}
+                            menuItemId={item.id}
                             name={item.name}
                             ingredients={item.ingredients || []}
+                            averageRating={item.averageRating}
+                            ratingCount={item.ratingCount}
                           />
                         ))}
                       </div>
@@ -115,8 +149,11 @@ export default async function Home() {
                         {hallMenu.dinner.map(item => (
                           <DishCard
                             key={item.id}
+                            menuItemId={item.id}
                             name={item.name}
                             ingredients={item.ingredients || []}
+                            averageRating={item.averageRating}
+                            ratingCount={item.ratingCount}
                           />
                         ))}
                       </div>
@@ -130,7 +167,7 @@ export default async function Home() {
 
         {/* Footer */}
         <div className="mt-8 pt-6 border-t text-center text-gray-500 text-sm">
-          <p>Data from USC Hospitality • Click a dish to see ingredients</p>
+          <p>Data from USC Hospitality • Click a dish to rate it</p>
         </div>
       </div>
     </main>
