@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
 import DishCard from './components/DishCard'
 import UserNav from './components/UserNav'
 
@@ -24,7 +25,7 @@ interface MenuItem {
 const DINING_HALLS = [
   { slug: 'village', name: 'USC Village', station: 'Expo' },
   { slug: 'parkside', name: 'Parkside', station: 'Bistro' },
-  { slug: 'evk', name: "Everybody's Kitchen", station: 'Hot Line' },
+  { slug: 'evk', name: "Everybody's Kitchen", station: 'Bar of the Day' },
 ]
 
 export default async function Home() {
@@ -165,8 +166,24 @@ export default async function Home() {
           )
         })}
 
+        {/* Navigation Links */}
+        <div className="mt-8 pt-6 border-t flex justify-center gap-6">
+          <Link
+            href="/all-menu-items"
+            className="text-[#990000] hover:underline font-medium"
+          >
+            View All Menu Items
+          </Link>
+          <Link
+            href="/my-ratings"
+            className="text-[#990000] hover:underline font-medium"
+          >
+            My Ratings
+          </Link>
+        </div>
+
         {/* Footer */}
-        <div className="mt-8 pt-6 border-t text-center text-gray-500 text-sm">
+        <div className="mt-4 text-center text-gray-500 text-sm">
           <p>Data from USC Hospitality • Click a dish to rate it</p>
         </div>
       </div>

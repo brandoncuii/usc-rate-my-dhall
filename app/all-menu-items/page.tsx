@@ -1,0 +1,190 @@
+import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
+import DishCard from '../components/DishCard'
+import UserNav from '../components/UserNav'
+
+export const dynamic = 'force-dynamic'
+
+interface MenuItem {
+  id: string
+  name: string
+  date: string
+  meal_period: string
+  ingredients: string[]
+  station: {
+    name: string
+    dining_hall: {
+      name: string
+      slug: string
+    }
+  }
+  averageRating: number
+  ratingCount: number
+}
+
+const DINING_HALLS = [
+  { slug: 'village', name: 'USC Village' },
+  { slug: 'parkside', name: 'Parkside' },
+  { slug: 'evk', name: "Everybody's Kitchen" },
+]
+
+export default async function AllMenuItems() {
+  // Fetch all menu items with station and dining hall info
+  const { data: menuItems, error } = await supabase
+    .from('menu_items')
+    .select(`
+      id,
+      name,
+      date,
+      meal_period,
+      ingredients,
+      station:stations(
+        name,
+        dining_hall:dining_halls(name, slug)
+      )
+    `)
+    .order('date', { ascending: false })
+
+  if (error) {
+    return <div className="p-8 text-red-600">Error loading menu: {error.message}</div>
+  }
+
+  // Fetch ratings for all menu items
+  const menuItemIds = menuItems?.map(item => item.id) || []
+  const { data: ratings } = await supabase
+    .from('ratings')
+    .select('menu_item_id, score')
+    .in('menu_item_id', menuItemIds)
+
+  // Calculate average ratings and counts for each menu item
+  const ratingStats: Record<string, { total: number; count: number }> = {}
+  ratings?.forEach(rating => {
+    if (!ratingStats[rating.menu_item_id]) {
+      ratingStats[rating.menu_item_id] = { total: 0, count: 0 }
+    }
+    ratingStats[rating.menu_item_id].total += rating.score
+    ratingStats[rating.menu_item_id].count += 1
+  })
+
+  // Add rating data to menu items
+  const menuItemsWithRatings = menuItems?.map(item => ({
+    ...item,
+    averageRating: ratingStats[item.id]
+      ? ratingStats[item.id].total / ratingStats[item.id].count
+      : 0,
+    ratingCount: ratingStats[item.id]?.count || 0
+  })) || []
+
+  // Group by dining hall
+  const menuByHall: Record<string, MenuItem[]> = {}
+  DINING_HALLS.forEach(hall => {
+    menuByHall[hall.slug] = []
+  })
+
+  menuItemsWithRatings.forEach((item: any) => {
+    const hallSlug = item.station?.dining_hall?.slug
+    if (hallSlug && menuByHall[hallSlug]) {
+      menuByHall[hallSlug].push(item)
+    }
+  })
+
+  // Sort each hall's items by date (newest first) then by name
+  Object.keys(menuByHall).forEach(slug => {
+    menuByHall[slug].sort((a, b) => {
+      if (a.date !== b.date) return b.date.localeCompare(a.date)
+      return a.name.localeCompare(b.name)
+    })
+  })
+
+  // Get unique dates for grouping display
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00')
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  }
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-[#990000] text-white py-6 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold">All Menu Items</h1>
+            <UserNav />
+          </div>
+          <p className="text-white/80">
+            Browse all dishes across all dining halls
+          </p>
+        </div>
+      </header>
+
+      {/* Navigation */}
+      <div className="bg-white border-b">
+        <div className="max-w-4xl mx-auto px-6 py-3 flex justify-between items-center">
+          <Link href="/" className="text-[#990000] hover:underline text-sm">
+            ← Back to Today's Menu
+          </Link>
+          <Link href="/my-ratings" className="text-[#990000] hover:underline text-sm">
+            My Ratings →
+          </Link>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-4xl mx-auto p-6">
+        {DINING_HALLS.map(hall => {
+          const hallItems = menuByHall[hall.slug]
+
+          // Group items by date
+          const itemsByDate: Record<string, MenuItem[]> = {}
+          hallItems.forEach(item => {
+            if (!itemsByDate[item.date]) {
+              itemsByDate[item.date] = []
+            }
+            itemsByDate[item.date].push(item)
+          })
+
+          const dates = Object.keys(itemsByDate).sort((a, b) => b.localeCompare(a))
+
+          return (
+            <section key={hall.slug} className="mb-10">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">
+                {hall.name}
+              </h2>
+
+              {hallItems.length === 0 ? (
+                <p className="text-gray-500 text-sm italic">No menu items found</p>
+              ) : (
+                <div className="space-y-6">
+                  {dates.map(date => (
+                    <div key={date}>
+                      <h3 className="text-sm font-semibold text-[#990000] uppercase tracking-wide mb-3">
+                        {formatDate(date)}
+                      </h3>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {itemsByDate[date].map(item => (
+                          <DishCard
+                            key={item.id}
+                            menuItemId={item.id}
+                            name={item.name}
+                            ingredients={item.ingredients || []}
+                            averageRating={item.averageRating}
+                            ratingCount={item.ratingCount}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )
+        })}
+
+        {/* Footer */}
+        <div className="mt-8 pt-6 border-t text-center text-gray-500 text-sm">
+          <p>Data from USC Hospitality • Click a dish to rate it</p>
+        </div>
+      </div>
+    </main>
+  )
+}

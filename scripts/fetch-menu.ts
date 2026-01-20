@@ -41,8 +41,8 @@ const DINING_HALLS: DiningHallConfig[] = [
     name: "Everybody's Kitchen",
     slug: 'evk',
     tabName: "Everybody",  // Just match partial text
-    stationName: 'HOT LINE',  // Look for "... Bar" under HOT LINE
-    stationSlug: 'hot-line'
+    stationName: 'BAR',  // Look for sections ending in "BAR" (e.g., QUESADILLA BAR)
+    stationSlug: 'bar-of-the-day'
   }
 ]
 
@@ -123,15 +123,26 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
 
       // Check if this is our target station
       if (config.slug === 'evk') {
-        // For EVK, look for HOT LINE section
-        inTargetStation = upperLine.includes('HOT LINE')
+        // For EVK, look for sections ending in "BAR" (e.g., QUESADILLA BAR, TACO BAR)
+        // Exclude "SALAD AND DELI BAR" and breakfast bars
+        const isBarSection = upperLine.endsWith(' BAR') || upperLine === 'BAR'
+        const isExcludedBar = upperLine.includes('SALAD') || upperLine.includes('DELI') ||
+                              upperLine.includes('WAFFLE') || upperLine.includes('BREAKFAST')
+        inTargetStation = isBarSection && !isExcludedBar
+        if (inTargetStation) {
+          // The section name IS the dish name for EVK
+          currentDish = { name: line, ingredients: [] }
+          foundDishName = true
+          console.log(`Found EVK bar: ${line}`)
+        } else {
+          foundDishName = false
+        }
       } else {
         inTargetStation = upperLine.includes(config.stationName)
-      }
-
-      foundDishName = false
-      if (inTargetStation) {
-        console.log(`Found ${config.stationName} station`)
+        foundDishName = false
+        if (inTargetStation) {
+          console.log(`Found ${config.stationName} station`)
+        }
       }
       continue
     }
@@ -139,7 +150,6 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
     // If we're in target station and it's lunch or dinner, capture dish and ingredients
     if (inTargetStation && currentMeal && (currentMeal === 'lunch' || currentMeal === 'dinner')) {
       // Skip filter/UI items and footer text
-      // Only skip if the line is EXACTLY a filter label (not part of a dish name)
       const skipPatterns = [
         /^dairy$/i, /^eggs$/i, /^fish$/i, /^gluten$/i, /^peanuts$/i,
         /^pork$/i, /^sesame$/i, /^shellfish$/i, /^soy$/i, /^tree nuts$/i,
@@ -157,10 +167,12 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
 
       if (skipPatterns.some(p => p.test(line))) continue
 
-      // For EVK, look for lines ending in "Bar" as the dish name
-      if (config.slug === 'evk') {
-        if (line.toLowerCase().includes('bar') && !foundDishName) {
-          // This is the dish name (e.g., "QUESADILLA BAR")
+      // For Village and Parkside, first non-station line after EXPO/BISTRO is the dish name
+      // (EVK already sets the dish name when finding the BAR section)
+      if (!foundDishName && line.length > 3 && line.length < 60) {
+        // Check if it looks like a dish name (not all caps, reasonable length)
+        const looksLikeDishName = line !== upperLine || line.includes(' ')
+        if (looksLikeDishName) {
           if (currentDish) {
             dishes.push({
               diningHall: config.slug,
@@ -174,27 +186,6 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
           foundDishName = true
           console.log(`  Dish: ${line}`)
           continue
-        }
-      } else {
-        // For Village and Parkside, first non-station line after EXPO/BISTRO is the dish name
-        if (!foundDishName && line.length > 3 && line.length < 60) {
-          // Check if it looks like a dish name (not all caps, reasonable length)
-          const looksLikeDishName = line !== upperLine || line.includes(' ')
-          if (looksLikeDishName) {
-            if (currentDish) {
-              dishes.push({
-                diningHall: config.slug,
-                station: config.stationSlug,
-                dishName: currentDish.name,
-                ingredients: currentDish.ingredients,
-                mealPeriod: currentMeal
-              })
-            }
-            currentDish = { name: line, ingredients: [] }
-            foundDishName = true
-            console.log(`  Dish: ${line}`)
-            continue
-          }
         }
       }
 
@@ -220,10 +211,99 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
   return dishes
 }
 
+async function setDateToToday(page: Page): Promise<void> {
+  const today = new Date()
+  const month = today.toLocaleString('en-US', { month: 'long' })
+  const day = today.getDate()
+  const year = today.getFullYear()
+  const todayFormatted = `${month} ${day}, ${year}`
+
+  console.log(`Setting date picker to today: ${todayFormatted}`)
+
+  try {
+    // Look for date picker input or button - USC Hospitality uses various date picker implementations
+    // Try clicking on the date display/input to open the picker
+    const dateSelector = await page.$('input[type="date"], .date-picker, .datepicker, [data-date], .menu-date-selector, input[name*="date"], button:has-text("Select Date"), .date-nav')
+
+    if (dateSelector) {
+      await dateSelector.click()
+      await page.waitForTimeout(500)
+    }
+
+    // Try to find and click a "Today" button if it exists
+    const todayButton = await page.$('button:has-text("Today"), a:has-text("Today"), .today-btn, .ui-datepicker-today')
+    if (todayButton) {
+      await todayButton.click()
+      console.log('Clicked "Today" button')
+      await page.waitForTimeout(1500)
+      return
+    }
+
+    // Try to find date navigation arrows and navigate to today
+    // First, check if current displayed date matches today
+    const pageText = await page.evaluate(() => document.body.innerText)
+
+    // Check if today's date is already displayed
+    const datePatterns = [
+      todayFormatted,
+      `${month} ${day}`,
+      today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+      today.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
+    ]
+
+    const dateAlreadySet = datePatterns.some(pattern => pageText.includes(pattern))
+
+    if (dateAlreadySet) {
+      console.log('Date is already set to today')
+      return
+    }
+
+    // Look for left/previous arrow to go back if showing future date
+    // The site might show tomorrow's date later in the day
+    const prevButton = await page.$('button[aria-label*="previous"], button[aria-label*="Previous"], .prev-date, .date-prev, [class*="prev"], [class*="left-arrow"], button:has-text("<"), button:has-text("‹"), .slick-prev')
+
+    if (prevButton) {
+      // Click previous up to 7 times to find today
+      for (let i = 0; i < 7; i++) {
+        await prevButton.click()
+        await page.waitForTimeout(1000)
+
+        const updatedText = await page.evaluate(() => document.body.innerText)
+        const foundToday = datePatterns.some(pattern => updatedText.includes(pattern))
+
+        if (foundToday) {
+          console.log(`Found today's date after ${i + 1} click(s)`)
+          return
+        }
+      }
+    }
+
+    // Alternative: Try using keyboard to navigate date input
+    const dateInput = await page.$('input[type="date"]')
+    if (dateInput) {
+      const isoDate = today.toISOString().split('T')[0] // YYYY-MM-DD format
+      await dateInput.fill(isoDate)
+      await page.waitForTimeout(1000)
+      console.log(`Set date input to ${isoDate}`)
+      return
+    }
+
+    console.log('Could not find date picker controls, proceeding with displayed date')
+
+  } catch (error) {
+    console.log('Error interacting with date picker:', error)
+    console.log('Proceeding with current page state')
+  }
+}
+
 async function scrapeAllDiningHalls(page: Page): Promise<ScrapedDish[]> {
   console.log('Navigating to menu page...')
   await page.goto(MENU_URL, { waitUntil: 'networkidle', timeout: 60000 })
   await page.waitForTimeout(3000)
+
+  // Ensure the date picker is set to today's date
+  await setDateToToday(page)
+  await page.waitForTimeout(1500)
 
   const allDishes: ScrapedDish[] = []
 
@@ -239,18 +319,7 @@ async function insertDishes(supabase: SupabaseClient, dishes: ScrapedDish[]): Pr
   const today = new Date().toISOString().split('T')[0]
 
   console.log('\n========== INSERTING INTO DATABASE ==========')
-
-  // First, clear ALL menu items for today to avoid duplicates
-  const { error: clearError } = await supabase
-    .from('menu_items')
-    .delete()
-    .eq('date', today)
-
-  if (clearError) {
-    console.log('Warning: Could not clear old items:', clearError.message)
-  } else {
-    console.log('Cleared all menu items for today')
-  }
+  console.log('Using upsert to preserve existing menu item IDs and ratings')
 
   for (const hallConfig of DINING_HALLS) {
     // Get dining hall ID
@@ -318,7 +387,7 @@ async function insertDishes(supabase: SupabaseClient, dishes: ScrapedDish[]): Pr
       }
     }
 
-    console.log(`${hallConfig.name}: inserted ${inserted} dishes`)
+    console.log(`${hallConfig.name}: upserted ${inserted} dishes`)
   }
 }
 
