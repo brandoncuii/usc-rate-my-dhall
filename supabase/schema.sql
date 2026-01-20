@@ -68,6 +68,12 @@ CREATE POLICY "Public read" ON stations FOR SELECT USING (true);
 CREATE POLICY "Public read" ON menu_items FOR SELECT USING (true);
 CREATE POLICY "Public read" ON ratings FOR SELECT USING (true);
 
+-- Allow public writes to stations and menu_items for data import
+-- NOTE: In production, you'd use a service role key instead
+CREATE POLICY "Public insert" ON stations FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public insert" ON menu_items FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update" ON menu_items FOR UPDATE USING (true);
+
 -- Only authenticated users can rate
 CREATE POLICY "Auth insert" ON ratings FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Auth update" ON ratings FOR UPDATE USING (auth.uid() = user_id);

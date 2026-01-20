@@ -21,6 +21,7 @@ export interface MenuItem {
   meal_period: 'breakfast' | 'brunch' | 'lunch' | 'dinner'
   dietary_tags: string[]
   allergens: string[]
+  ingredients: string[]
   created_at: string
 }
 
