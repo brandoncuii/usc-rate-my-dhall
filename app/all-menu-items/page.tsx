@@ -108,17 +108,19 @@ export default async function PreviousMenuItems() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-[#990000] text-white py-6 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold">Previous Menu Items</h1>
-            <UserNav />
-          </div>
-          <p className="text-white/80">
-            Past dishes and their ratings
-          </p>
+      <header className="bg-[#990000] text-white py-3 px-6">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <h1 className="text-xl font-bold">USC RateMyPlate</h1>
+          <UserNav />
         </div>
       </header>
+
+      {/* Subheader */}
+      <div className="bg-gray-100 border-b px-6 py-2">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-gray-600 text-sm">Previous Menu Items • Past dishes and their ratings</p>
+        </div>
+      </div>
 
       {/* Navigation */}
       <div className="bg-white border-b">
@@ -150,7 +152,7 @@ export default async function PreviousMenuItems() {
 
           return (
             <section key={hall.slug} className="mb-10">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b">
                 {hall.name}
               </h2>
 

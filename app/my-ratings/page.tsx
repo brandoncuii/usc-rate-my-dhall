@@ -15,7 +15,7 @@ interface RatingWithDish {
   menu_item: {
     id: string
     name: string
-    date: string
+    last_served_date: string
     meal_period: string
     station: {
       name: string
@@ -53,7 +53,7 @@ export default function MyRatings() {
         menu_item:menu_items(
           id,
           name,
-          date,
+          last_served_date,
           meal_period,
           station:stations(
             name,
@@ -106,17 +106,19 @@ export default function MyRatings() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-[#990000] text-white py-6 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold">My Ratings</h1>
-            <UserNav />
-          </div>
-          <p className="text-white/80">
-            Your rating history across all dining halls
-          </p>
+      <header className="bg-[#990000] text-white py-3 px-6">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <h1 className="text-xl font-bold">USC RateMyPlate</h1>
+          <UserNav />
         </div>
       </header>
+
+      {/* Subheader */}
+      <div className="bg-gray-100 border-b px-6 py-2">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-gray-600 text-sm">My Ratings • Your rating history across all dining halls</p>
+        </div>
+      </div>
 
       {/* Navigation */}
       <div className="bg-white border-b">
@@ -125,7 +127,7 @@ export default function MyRatings() {
             ← Back to Today's Menu
           </Link>
           <Link href="/all-menu-items" className="text-[#990000] hover:underline text-sm">
-            All Menu Items →
+            Previous Menu Items →
           </Link>
         </div>
       </div>
@@ -164,7 +166,7 @@ export default function MyRatings() {
 
             {Object.entries(ratingsByHall).map(([hallName, hallRatings]) => (
               <section key={hallName} className="mb-8">
-                <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b">
                   {hallName}
                   <span className="text-sm font-normal text-gray-500 ml-2">
                     ({hallRatings.length} ratings)
@@ -190,7 +192,7 @@ export default function MyRatings() {
                           </p>
                         </div>
                         <div className="text-right text-xs text-gray-400">
-                          <p>Menu date: {rating.menu_item?.date ? formatDate(rating.menu_item.date + 'T00:00:00') : 'N/A'}</p>
+                          <p>Last served: {rating.menu_item?.last_served_date ? formatDate(rating.menu_item.last_served_date + 'T00:00:00') : 'N/A'}</p>
                           <p>Rated: {formatTimestamp(rating.updated_at)}</p>
                         </div>
                       </div>

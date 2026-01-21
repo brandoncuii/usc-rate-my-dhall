@@ -64,6 +64,17 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
   const pageText = await page.evaluate(() => document.body.innerText)
   const lines = pageText.split('\n').map(l => l.trim()).filter(l => l.length > 0)
 
+  // Debug: Show lines around EXPO/BAR sections for this hall
+  if (config.slug === 'village' || config.slug === 'evk') {
+    console.log(`\n[DEBUG ${config.slug}] Looking for key sections:`)
+    lines.forEach((line, idx) => {
+      const upper = line.toUpperCase()
+      if (upper.includes('EXPO') || upper.includes('BAR') || upper === 'LUNCH' || upper === 'DINNER') {
+        console.log(`  [${idx}] ${line}`)
+      }
+    })
+  }
+
   // Station names to detect section boundaries
   const stationNames = [
     'EXPO', 'BISTRO', 'FLAME', 'GLOBAL', 'GRILL', 'HOME', 'PIZZA', 'SOUP',
@@ -106,7 +117,9 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
     }
 
     // Check if this line is a station header
+    // For EVK, also consider lines ending in " BAR" as station headers (for dynamic bars like HAWAIIAN BOWL BAR)
     const isStationHeader = stationNames.some(s => upperLine === s || upperLine.startsWith(s + ' '))
+      || (config.slug === 'evk' && upperLine.endsWith(' BAR'))
 
     if (isStationHeader) {
       // Save previous dish if exists
@@ -138,7 +151,8 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
           foundDishName = false
         }
       } else {
-        inTargetStation = upperLine.includes(config.stationName)
+        // Use exact match to avoid "EXPO MOJO PORK" matching "EXPO"
+        inTargetStation = upperLine === config.stationName
         foundDishName = false
         if (inTargetStation) {
           console.log(`Found ${config.stationName} station`)

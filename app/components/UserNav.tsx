@@ -7,6 +7,7 @@ import AuthForm from './AuthForm'
 export default function UserNav() {
   const { user, loading, signOut } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
 
   if (loading) {
     return <div className="text-white/60 text-sm">Loading...</div>
@@ -15,10 +16,10 @@ export default function UserNav() {
   if (user) {
     return (
       <div className="flex items-center gap-3">
-        <span className="text-white/80 text-sm">{user.email}</span>
+        <span className="text-white/80 text-sm hidden sm:inline">{user.email}</span>
         <button
           onClick={() => signOut()}
-          className="text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-lg transition-colors"
+          className="text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded transition-colors"
         >
           Sign Out
         </button>
@@ -28,12 +29,21 @@ export default function UserNav() {
 
   return (
     <>
-      <button
-        onClick={() => setShowAuthModal(true)}
-        className="text-sm bg-white text-[#990000] px-4 py-1.5 rounded-lg font-medium hover:bg-gray-100 transition-colors"
-      >
-        Sign In
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => { setAuthMode('signin'); setShowAuthModal(true) }}
+          className="text-sm text-white hover:text-white/80 transition-colors"
+        >
+          Sign In
+        </button>
+        <span className="text-white/40">|</span>
+        <button
+          onClick={() => { setAuthMode('signup'); setShowAuthModal(true) }}
+          className="text-sm bg-white text-[#990000] px-3 py-1 rounded font-medium hover:bg-gray-100 transition-colors"
+        >
+          Sign Up
+        </button>
+      </div>
 
       {/* Auth Modal */}
       {showAuthModal && (
@@ -45,7 +55,7 @@ export default function UserNav() {
             >
               ×
             </button>
-            <AuthForm />
+            <AuthForm initialMode={authMode} />
           </div>
         </div>
       )}

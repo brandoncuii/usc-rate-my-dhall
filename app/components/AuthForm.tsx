@@ -4,9 +4,13 @@ import { useState } from 'react'
 import { useAuth } from './AuthProvider'
 import { isValidUSCEmail } from '@/lib/supabase-browser'
 
-export default function AuthForm() {
+interface AuthFormProps {
+  initialMode?: 'signin' | 'signup'
+}
+
+export default function AuthForm({ initialMode = 'signin' }: AuthFormProps) {
   const { signIn, signUp } = useAuth()
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [mode, setMode] = useState<'signin' | 'signup'>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
