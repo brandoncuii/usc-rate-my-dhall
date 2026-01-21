@@ -117,9 +117,13 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
     }
 
     // Check if this line is a station header
+    // Station headers are ALL CAPS (e.g., "EXPO", "SALAD BAR"), dish names have mixed case (e.g., "Expo Mojo Pork")
     // For EVK, also consider lines ending in " BAR" as station headers (for dynamic bars like HAWAIIAN BOWL BAR)
-    const isStationHeader = stationNames.some(s => upperLine === s || upperLine.startsWith(s + ' '))
+    const isAllCaps = line === upperLine
+    const isStationHeader = isAllCaps && (
+      stationNames.some(s => upperLine === s || upperLine.startsWith(s + ' '))
       || (config.slug === 'evk' && upperLine.endsWith(' BAR'))
+    )
 
     if (isStationHeader) {
       // Save previous dish if exists
@@ -353,18 +357,26 @@ async function insertDishes(supabase: SupabaseClient, dishes: ScrapedDish[]): Pr
       console.log(`Created ${hallConfig.stationName} station for ${hallConfig.slug}`)
     }
 
-    // Insert dishes for this dining hall
+    // Insert dishes for this dining hall (dedupe by name - same dish for lunch/dinner is one entry)
     const hallDishes = dishes.filter(d => d.diningHall === hallConfig.slug)
+    const uniqueDishes = new Map<string, typeof hallDishes[0]>()
+    hallDishes.forEach(dish => {
+      // Keep the first occurrence (lunch takes priority over dinner)
+      if (!uniqueDishes.has(dish.dishName)) {
+        uniqueDishes.set(dish.dishName, dish)
+      }
+    })
+
     let inserted = 0
 
-    for (const dish of hallDishes) {
+    for (const dish of Array.from(uniqueDishes.values())) {
       const { error } = await supabase
         .from('menu_items')
         .upsert({
           station_id: station.id,
           name: dish.dishName,
           last_served_date: today,
-          meal_period: dish.mealPeriod,
+          meal_period: 'lunch',  // Always use 'lunch' since we're not differentiating
           dietary_tags: [],
           allergens: [],
           ingredients: dish.ingredients

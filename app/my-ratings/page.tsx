@@ -16,7 +16,6 @@ interface RatingWithDish {
     id: string
     name: string
     last_served_date: string
-    meal_period: string
     station: {
       name: string
       dining_hall: {
@@ -54,7 +53,6 @@ export default function MyRatings() {
           id,
           name,
           last_served_date,
-          meal_period,
           station:stations(
             name,
             dining_hall:dining_halls(name, slug)
@@ -199,7 +197,7 @@ export default function MyRatings() {
                             <StarRating rating={rating.score} size="sm" />
                           </div>
                           <p className="text-xs text-gray-500 mt-2">
-                            {rating.menu_item?.station?.name} • {rating.menu_item?.meal_period}
+                            {rating.menu_item?.station?.name}
                           </p>
                         </div>
                         <div className="text-right text-xs text-gray-400">
