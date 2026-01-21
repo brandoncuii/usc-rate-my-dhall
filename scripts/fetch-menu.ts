@@ -212,87 +212,63 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
 }
 
 async function setDateToToday(page: Page): Promise<void> {
-  const today = new Date()
-  const month = today.toLocaleString('en-US', { month: 'long' })
-  const day = today.getDate()
-  const year = today.getFullYear()
-  const todayFormatted = `${month} ${day}, ${year}`
-
-  console.log(`Setting date picker to today: ${todayFormatted}`)
+  // Get today's date in YYYY-MM-DD format (local time)
+  const now = new Date()
+  const todayISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  console.log(`Setting date picker to today: ${todayISO}`)
 
   try {
-    // Look for date picker input or button - USC Hospitality uses various date picker implementations
-    // Try clicking on the date display/input to open the picker
-    const dateSelector = await page.$('input[type="date"], .date-picker, .datepicker, [data-date], .menu-date-selector, input[name*="date"], button:has-text("Select Date"), .date-nav')
+    // The date input has id="date" and class="js-menu-date date"
+    const dateInput = await page.$('input#date, input.js-menu-date')
 
-    if (dateSelector) {
-      await dateSelector.click()
-      await page.waitForTimeout(500)
-    }
-
-    // Try to find and click a "Today" button if it exists
-    const todayButton = await page.$('button:has-text("Today"), a:has-text("Today"), .today-btn, .ui-datepicker-today')
-    if (todayButton) {
-      await todayButton.click()
-      console.log('Clicked "Today" button')
-      await page.waitForTimeout(1500)
-      return
-    }
-
-    // Try to find date navigation arrows and navigate to today
-    // First, check if current displayed date matches today
-    const pageText = await page.evaluate(() => document.body.innerText)
-
-    // Check if today's date is already displayed
-    const datePatterns = [
-      todayFormatted,
-      `${month} ${day}`,
-      today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
-      today.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
-    ]
-
-    const dateAlreadySet = datePatterns.some(pattern => pageText.includes(pattern))
-
-    if (dateAlreadySet) {
-      console.log('Date is already set to today')
-      return
-    }
-
-    // Look for left/previous arrow to go back if showing future date
-    // The site might show tomorrow's date later in the day
-    const prevButton = await page.$('button[aria-label*="previous"], button[aria-label*="Previous"], .prev-date, .date-prev, [class*="prev"], [class*="left-arrow"], button:has-text("<"), button:has-text("‹"), .slick-prev')
-
-    if (prevButton) {
-      // Click previous up to 7 times to find today
-      for (let i = 0; i < 7; i++) {
-        await prevButton.click()
-        await page.waitForTimeout(1000)
-
-        const updatedText = await page.evaluate(() => document.body.innerText)
-        const foundToday = datePatterns.some(pattern => updatedText.includes(pattern))
-
-        if (foundToday) {
-          console.log(`Found today's date after ${i + 1} click(s)`)
-          return
-        }
-      }
-    }
-
-    // Alternative: Try using keyboard to navigate date input
-    const dateInput = await page.$('input[type="date"]')
     if (dateInput) {
-      const isoDate = today.toISOString().split('T')[0] // YYYY-MM-DD format
-      await dateInput.fill(isoDate)
-      await page.waitForTimeout(1000)
-      console.log(`Set date input to ${isoDate}`)
-      return
-    }
+      // Get current value
+      const currentValue = await dateInput.inputValue()
+      console.log(`Current date value: ${currentValue}`)
 
-    console.log('Could not find date picker controls, proceeding with displayed date')
+      if (currentValue === todayISO) {
+        console.log('Date is already set to today')
+        return
+      }
+
+      // Click to open date picker
+      await dateInput.click()
+      await page.waitForTimeout(500)
+
+      // Take screenshot of date picker
+      await page.screenshot({ path: 'datepicker-popup.png' })
+
+      // Try to click "Today" button if it exists
+      const todayButton = page.getByText('Today', { exact: true })
+      if (await todayButton.count() > 0) {
+        await todayButton.first().click()
+        console.log('Clicked "Today" button')
+        await page.waitForTimeout(1000)
+      } else {
+        // Fallback: Set the value directly and trigger change event
+        await dateInput.fill(todayISO)
+        console.log(`Set date input to: ${todayISO}`)
+
+        // Trigger change event so the page reloads with new date
+        await page.evaluate(() => {
+          const input = document.querySelector('input#date, input.js-menu-date') as HTMLInputElement
+          if (input) {
+            input.dispatchEvent(new Event('change', { bubbles: true }))
+          }
+        })
+        await page.waitForTimeout(2000) // Wait for page to update
+      }
+
+      // Verify the date was set
+      const newValue = await dateInput.inputValue()
+      console.log(`Date value after update: ${newValue}`)
+
+    } else {
+      console.log('Could not find date input')
+    }
 
   } catch (error) {
     console.log('Error interacting with date picker:', error)
-    console.log('Proceeding with current page state')
   }
 }
 
@@ -316,7 +292,9 @@ async function scrapeAllDiningHalls(page: Page): Promise<ScrapedDish[]> {
 }
 
 async function insertDishes(supabase: SupabaseClient, dishes: ScrapedDish[]): Promise<void> {
-  const today = new Date().toISOString().split('T')[0]
+  // Use local date to avoid timezone issues
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   console.log('\n========== INSERTING INTO DATABASE ==========')
   console.log('Using upsert to preserve existing menu item IDs and ratings')
@@ -371,13 +349,13 @@ async function insertDishes(supabase: SupabaseClient, dishes: ScrapedDish[]): Pr
         .upsert({
           station_id: station.id,
           name: dish.dishName,
-          date: today,
+          last_served_date: today,
           meal_period: dish.mealPeriod,
           dietary_tags: [],
           allergens: [],
           ingredients: dish.ingredients
         }, {
-          onConflict: 'station_id,name,date,meal_period'
+          onConflict: 'station_id,name,meal_period'
         })
 
       if (error) {

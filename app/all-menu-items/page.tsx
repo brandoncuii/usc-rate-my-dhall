@@ -1,16 +1,15 @@
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import DishCard from '../components/DishCard'
 import UserNav from '../components/UserNav'
+import StarRating from '../components/StarRating'
 
 export const dynamic = 'force-dynamic'
 
 interface MenuItem {
   id: string
   name: string
-  date: string
+  last_served_date: string
   meal_period: string
-  ingredients: string[]
   station: {
     name: string
     dining_hall: {
@@ -28,22 +27,26 @@ const DINING_HALLS = [
   { slug: 'evk', name: "Everybody's Kitchen" },
 ]
 
-export default async function AllMenuItems() {
-  // Fetch all menu items with station and dining hall info
+export default async function PreviousMenuItems() {
+  // Use local date to avoid timezone issues (toISOString converts to UTC)
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+  // Fetch previous menu items (before today) with station and dining hall info
   const { data: menuItems, error } = await supabase
     .from('menu_items')
     .select(`
       id,
       name,
-      date,
+      last_served_date,
       meal_period,
-      ingredients,
       station:stations(
         name,
         dining_hall:dining_halls(name, slug)
       )
     `)
-    .order('date', { ascending: false })
+    .lt('last_served_date', today)
+    .order('last_served_date', { ascending: false })
 
   if (error) {
     return <div className="p-8 text-red-600">Error loading menu: {error.message}</div>
@@ -88,10 +91,10 @@ export default async function AllMenuItems() {
     }
   })
 
-  // Sort each hall's items by date (newest first) then by name
+  // Sort each hall's items by last_served_date (newest first) then by name
   Object.keys(menuByHall).forEach(slug => {
     menuByHall[slug].sort((a, b) => {
-      if (a.date !== b.date) return b.date.localeCompare(a.date)
+      if (a.last_served_date !== b.last_served_date) return b.last_served_date.localeCompare(a.last_served_date)
       return a.name.localeCompare(b.name)
     })
   })
@@ -108,11 +111,11 @@ export default async function AllMenuItems() {
       <header className="bg-[#990000] text-white py-6 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold">All Menu Items</h1>
+            <h1 className="text-3xl font-bold">Previous Menu Items</h1>
             <UserNav />
           </div>
           <p className="text-white/80">
-            Browse all dishes across all dining halls
+            Past dishes and their ratings
           </p>
         </div>
       </header>
@@ -134,13 +137,13 @@ export default async function AllMenuItems() {
         {DINING_HALLS.map(hall => {
           const hallItems = menuByHall[hall.slug]
 
-          // Group items by date
+          // Group items by last_served_date
           const itemsByDate: Record<string, MenuItem[]> = {}
           hallItems.forEach(item => {
-            if (!itemsByDate[item.date]) {
-              itemsByDate[item.date] = []
+            if (!itemsByDate[item.last_served_date]) {
+              itemsByDate[item.last_served_date] = []
             }
-            itemsByDate[item.date].push(item)
+            itemsByDate[item.last_served_date].push(item)
           })
 
           const dates = Object.keys(itemsByDate).sort((a, b) => b.localeCompare(a))
@@ -152,7 +155,7 @@ export default async function AllMenuItems() {
               </h2>
 
               {hallItems.length === 0 ? (
-                <p className="text-gray-500 text-sm italic">No menu items found</p>
+                <p className="text-gray-500 text-sm italic">No previous menu items found</p>
               ) : (
                 <div className="space-y-6">
                   {dates.map(date => (
@@ -160,16 +163,18 @@ export default async function AllMenuItems() {
                       <h3 className="text-sm font-semibold text-[#990000] uppercase tracking-wide mb-3">
                         {formatDate(date)}
                       </h3>
-                      <div className="grid md:grid-cols-2 gap-3">
+                      <div className="space-y-2">
                         {itemsByDate[date].map(item => (
-                          <DishCard
+                          <div
                             key={item.id}
-                            menuItemId={item.id}
-                            name={item.name}
-                            ingredients={item.ingredients || []}
-                            averageRating={item.averageRating}
-                            ratingCount={item.ratingCount}
-                          />
+                            className="bg-white rounded-lg shadow-sm border border-gray-100 px-4 py-3 flex items-center justify-between"
+                          >
+                            <div>
+                              <span className="font-medium text-gray-800">{item.name}</span>
+                              <span className="text-xs text-gray-500 ml-2">({item.meal_period})</span>
+                            </div>
+                            <StarRating rating={item.averageRating} count={item.ratingCount} size="sm" />
+                          </div>
                         ))}
                       </div>
                     </div>

@@ -29,7 +29,9 @@ const DINING_HALLS = [
 ]
 
 export default async function Home() {
-  const today = new Date().toISOString().split('T')[0]
+  // Use local date to avoid timezone issues (toISOString converts to UTC)
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   // Fetch all menu items for today with station and dining hall info
   const { data: menuItems, error } = await supabase
@@ -44,7 +46,7 @@ export default async function Home() {
         dining_hall:dining_halls(name, slug)
       )
     `)
-    .eq('date', today)
+    .eq('last_served_date', today)
     .in('meal_period', ['lunch', 'dinner'])
 
   if (error) {
@@ -172,7 +174,7 @@ export default async function Home() {
             href="/all-menu-items"
             className="text-[#990000] hover:underline font-medium"
           >
-            View All Menu Items
+            Previous Menu Items
           </Link>
           <Link
             href="/my-ratings"
