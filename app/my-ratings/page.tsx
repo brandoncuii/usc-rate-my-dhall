@@ -108,7 +108,18 @@ export default function MyRatings() {
       {/* Header */}
       <header className="bg-[#990000] text-white py-3 px-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold">USC RateMyPlate</h1>
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-2xl font-bold hover:text-white/90 transition-colors">
+              USC RateMyPlate
+            </Link>
+            <span className="text-white/40">|</span>
+            <Link href="/all-menu-items" className="text-sm text-white hover:text-white/80 underline underline-offset-2 transition-colors">
+              Previous Menu Items
+            </Link>
+            <Link href="/my-ratings" className="text-sm text-white hover:text-white/80 underline underline-offset-2 transition-colors">
+              My Ratings
+            </Link>
+          </div>
           <UserNav />
         </div>
       </header>

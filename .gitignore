@@ -1,4 +1,21 @@
+# Dependencies
+node_modules/
+
+# Next.js
 .next/
+out/
 
 # Debug screenshots
 *.png
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Lock files (optional - remove if you want to track)
+package-lock.json

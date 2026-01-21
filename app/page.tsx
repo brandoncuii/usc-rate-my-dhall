@@ -98,7 +98,18 @@ export default async function Home() {
       {/* Header */}
       <header className="bg-[#990000] text-white py-3 px-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold">USC RateMyPlate</h1>
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-2xl font-bold hover:text-white/90 transition-colors">
+              USC RateMyPlate
+            </Link>
+            <span className="text-white/40">|</span>
+            <Link href="/all-menu-items" className="text-sm text-white hover:text-white/80 underline underline-offset-2 transition-colors">
+              Previous Menu Items
+            </Link>
+            <Link href="/my-ratings" className="text-sm text-white hover:text-white/80 underline underline-offset-2 transition-colors">
+              My Ratings
+            </Link>
+          </div>
           <UserNav />
         </div>
       </header>
@@ -171,22 +182,6 @@ export default async function Home() {
             </section>
           )
         })}
-
-        {/* Navigation Links */}
-        <div className="mt-8 pt-6 border-t flex justify-center gap-6">
-          <Link
-            href="/all-menu-items"
-            className="text-[#990000] hover:underline font-medium"
-          >
-            Previous Menu Items
-          </Link>
-          <Link
-            href="/my-ratings"
-            className="text-[#990000] hover:underline font-medium"
-          >
-            My Ratings
-          </Link>
-        </div>
 
         {/* Footer */}
         <div className="mt-4 text-center text-gray-500 text-sm">
