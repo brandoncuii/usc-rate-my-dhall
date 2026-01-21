@@ -105,7 +105,7 @@ export default function MyRatings() {
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-[#990000] text-white py-3 px-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="text-2xl font-bold hover:text-white/90 transition-colors">
               USC RateMyPlate

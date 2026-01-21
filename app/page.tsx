@@ -94,7 +94,7 @@ export default async function Home() {
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-[#990000] text-white py-3 px-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="text-2xl font-bold hover:text-white/90 transition-colors">
               USC RateMyPlate
@@ -113,48 +113,48 @@ export default async function Home() {
 
       {/* Date Subheader */}
       <div className="bg-gray-100 border-b px-6 py-2">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-gray-600 text-sm">
-            Today's Featured Dishes • {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
+        <p className="text-gray-600 text-sm">
+          Today's Featured Dishes • {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        </p>
       </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto p-6">
-        {DINING_HALLS.map(hall => {
-          const hallItems = menuByHall[hall.slug]
+      {/* Content - 3 columns */}
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {DINING_HALLS.map(hall => {
+            const hallItems = menuByHall[hall.slug]
 
-          return (
-            <section key={hall.slug} className="mb-10">
-              <div className="flex items-baseline gap-3 mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">{hall.name}</h2>
-                <span className="text-sm text-[#990000] font-medium">{hall.station}</span>
-              </div>
-
-              {hallItems.length === 0 ? (
-                <p className="text-gray-500 text-sm italic">No featured dishes today</p>
-              ) : (
-                <div className="space-y-3">
-                  {hallItems.map(item => (
-                    <DishCard
-                      key={item.id}
-                      menuItemId={item.id}
-                      name={item.name}
-                      ingredients={item.ingredients || []}
-                      averageRating={item.averageRating}
-                      ratingCount={item.ratingCount}
-                    />
-                  ))}
+            return (
+              <section key={hall.slug} className="min-h-0">
+                <div className="mb-4 pb-2 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-800">{hall.name}</h2>
+                  <span className="text-sm text-[#990000] font-medium">{hall.station}</span>
                 </div>
-              )}
-            </section>
-          )
-        })}
+
+                {hallItems.length === 0 ? (
+                  <p className="text-gray-500 text-sm italic">No featured dishes today</p>
+                ) : (
+                  <div className="space-y-4">
+                    {hallItems.map(item => (
+                      <DishCard
+                        key={item.id}
+                        menuItemId={item.id}
+                        name={item.name}
+                        ingredients={item.ingredients || []}
+                        averageRating={item.averageRating}
+                        ratingCount={item.ratingCount}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )
+          })}
+        </div>
 
         {/* Footer */}
-        <div className="mt-4 text-center text-gray-500 text-sm">
-          <p>Data from USC Hospitality • Click a dish to rate it</p>
+        <div className="mt-8 pt-4 border-t text-center text-gray-500 text-sm">
+          <p>Data from USC Hospitality</p>
         </div>
       </div>
     </main>
