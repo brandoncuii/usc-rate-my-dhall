@@ -96,8 +96,8 @@ export default async function Home() {
       <header className="bg-[#990000] text-white py-3 px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-2xl font-bold hover:text-white/90 transition-colors">
-              USC RateMyPlate
+            <Link href="/" className="text-2xl font-bold hover:opacity-90 transition-opacity">
+              <span className="text-[#FFCC00]">USC</span>RateMyPlate
             </Link>
             <span className="text-white/40">|</span>
             <Link href="/all-menu-items" className="text-sm text-white hover:text-white/80 underline underline-offset-2 transition-colors">
@@ -112,8 +112,8 @@ export default async function Home() {
       </header>
 
       {/* Date Subheader */}
-      <div className="bg-gray-100 border-b px-6 py-2">
-        <p className="text-gray-600 text-sm">
+      <div className="bg-gray-100 border-b px-6 py-3">
+        <p className="text-gray-700 text-lg font-medium">
           Today's Featured Dishes • {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
       </div>
@@ -127,7 +127,7 @@ export default async function Home() {
             return (
               <section key={hall.slug} className="min-h-0">
                 <div className="mb-4 pb-2 border-b border-gray-200">
-                  <h2 className="text-xl font-bold text-gray-800">{hall.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">{hall.name}</h2>
                   <span className="text-sm text-[#990000] font-medium">{hall.station}</span>
                 </div>
 

@@ -52,8 +52,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabaseBrowser.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: undefined,
+      },
     })
-    return { error }
+    if (error) return { error }
+
+    // Auto sign-in after successful signup (no email confirmation)
+    const { error: signInError } = await supabaseBrowser.auth.signInWithPassword({
+      email,
+      password,
+    })
+    return { error: signInError }
   }
 
   const signOut = async () => {

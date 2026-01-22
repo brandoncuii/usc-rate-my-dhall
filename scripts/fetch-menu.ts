@@ -83,7 +83,7 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
     'CHEF TABLE', "CHEF'S TABLE", 'MONGOLIAN', 'WOK', 'TAQUERIA', 'COMFORT',
     'HARVEST', 'ROOTS', 'WORLD', 'CUCINA', 'STEAM', 'FIRED', 'CRAFT',
     'FLEXITARIAN', 'CREPES', 'SALAD BAR', 'DELI BAR', 'BREAKFAST/DESSERT/FRUIT',
-    'FRESH FROM THE FARM', 'QUESADILLA BAR'
+    'FRESH FROM THE FARM', 'QUESADILLA BAR', 'EURASIA'
   ]
 
   const mealPeriods = ['Breakfast', 'Lunch', 'Dinner']

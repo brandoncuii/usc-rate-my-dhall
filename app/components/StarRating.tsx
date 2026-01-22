@@ -21,6 +21,9 @@ export default function StarRating({ rating, count, size = 'md' }: StarRatingPro
 
   return (
     <div className="flex items-center gap-1">
+      <span className={`font-medium text-gray-700 ${textSizes[size]}`}>
+        {rating.toFixed(1)}
+      </span>
       <div className="flex">
         {[1, 2, 3, 4, 5].map((star) => {
           const filled = star <= Math.floor(rating)

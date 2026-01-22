@@ -40,9 +40,8 @@ export default function AuthForm({ initialMode = 'signin' }: AuthFormProps) {
       const { error } = await signUp(email, password)
       if (error) {
         setError(error.message)
-      } else {
-        setMessage('Check your email for a confirmation link!')
       }
+      // Auto signs in on success, no action needed
     } else {
       const { error } = await signIn(email, password)
       if (error) {
