@@ -27,9 +27,10 @@ const DINING_HALLS = [
 ]
 
 export default async function PreviousMenuItems() {
-  // Use local date to avoid timezone issues (toISOString converts to UTC)
+  // Use Pacific time (USC's timezone) for consistent date across all servers
   const now = new Date()
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const pacificDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  const today = `${pacificDate.getFullYear()}-${String(pacificDate.getMonth() + 1).padStart(2, '0')}-${String(pacificDate.getDate()).padStart(2, '0')}`
 
   // Fetch previous menu items (before today) with station and dining hall info
   const { data: menuItems, error } = await supabase

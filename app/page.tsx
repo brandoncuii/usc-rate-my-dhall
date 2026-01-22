@@ -28,9 +28,10 @@ const DINING_HALLS = [
 ]
 
 export default async function Home() {
-  // Use local date to avoid timezone issues (toISOString converts to UTC)
+  // Use Pacific time (USC's timezone) for consistent date across all servers
   const now = new Date()
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const pacificDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  const today = `${pacificDate.getFullYear()}-${String(pacificDate.getMonth() + 1).padStart(2, '0')}-${String(pacificDate.getDate()).padStart(2, '0')}`
 
   // Fetch all menu items for today with station and dining hall info
   const { data: menuItems, error } = await supabase
@@ -114,7 +115,7 @@ export default async function Home() {
       {/* Date Subheader */}
       <div className="bg-gray-100 border-b px-6 py-3">
         <p className="text-gray-700 text-lg font-medium">
-          Today's Featured Dishes • {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          Today's Featured Dishes • {new Date().toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
       </div>
 

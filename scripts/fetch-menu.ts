@@ -230,9 +230,10 @@ async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<S
 }
 
 async function setDateToToday(page: Page): Promise<void> {
-  // Get today's date in YYYY-MM-DD format (local time)
+  // Get today's date in YYYY-MM-DD format (Pacific time)
   const now = new Date()
-  const todayISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const pacificDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  const todayISO = `${pacificDate.getFullYear()}-${String(pacificDate.getMonth() + 1).padStart(2, '0')}-${String(pacificDate.getDate()).padStart(2, '0')}`
   console.log(`Setting date picker to today: ${todayISO}`)
 
   try {
@@ -310,9 +311,10 @@ async function scrapeAllDiningHalls(page: Page): Promise<ScrapedDish[]> {
 }
 
 async function insertDishes(supabase: SupabaseClient, dishes: ScrapedDish[]): Promise<void> {
-  // Use local date to avoid timezone issues
+  // Use Pacific time (USC's timezone) for consistent dates
   const now = new Date()
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const pacificDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  const today = `${pacificDate.getFullYear()}-${String(pacificDate.getMonth() + 1).padStart(2, '0')}-${String(pacificDate.getDate()).padStart(2, '0')}`
 
   console.log('\n========== INSERTING INTO DATABASE ==========')
   console.log('Using upsert to preserve existing menu item IDs and ratings')
