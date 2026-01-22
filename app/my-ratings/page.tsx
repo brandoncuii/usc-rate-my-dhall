@@ -107,8 +107,8 @@ export default function MyRatings() {
       <header className="bg-[#990000] text-white py-3 px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-2xl font-bold hover:text-white/90 transition-colors">
-              USC RateMyPlate
+            <Link href="/" className="text-2xl font-bold hover:opacity-90 transition-opacity">
+              <span className="text-[#FFCC00]">USC</span>RateMyPlate
             </Link>
             <span className="text-white/40">|</span>
             <Link href="/all-menu-items" className="text-sm text-white hover:text-white/80 underline underline-offset-2 transition-colors">
@@ -126,18 +126,6 @@ export default function MyRatings() {
       <div className="bg-gray-100 border-b px-6 py-2">
         <div className="max-w-4xl mx-auto">
           <p className="text-gray-600 text-sm">My Ratings • Your rating history across all dining halls</p>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-6 py-3 flex justify-between items-center">
-          <Link href="/" className="text-[#990000] hover:underline text-sm">
-            ← Back to Today's Menu
-          </Link>
-          <Link href="/all-menu-items" className="text-[#990000] hover:underline text-sm">
-            Previous Menu Items →
-          </Link>
         </div>
       </div>
 
