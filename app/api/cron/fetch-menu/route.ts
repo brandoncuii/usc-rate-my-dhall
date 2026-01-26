@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
 
-export async function GET() {
-  const pat = process.env.GITHUB_PAT
-
-  // Debug: check if env var exists
-  if (!pat) {
-    const envKeys = Object.keys(process.env).filter(k => k.includes('GIT') || k.includes('PAT') || k.includes('CRON'))
-    return NextResponse.json({ error: 'GITHUB_PAT not set', availableKeys: envKeys }, { status: 500 })
+export async function GET(request: Request) {
+  // Verify the request is from Vercel Cron
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -17,7 +15,7 @@ export async function GET() {
         method: 'POST',
         headers: {
           'Accept': 'application/vnd.github.v3+json',
-          'Authorization': `Bearer ${pat.trim()}`,
+          'Authorization': `Bearer ${process.env.GITHUB_PAT}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -29,7 +27,7 @@ export async function GET() {
     if (!response.ok) {
       const error = await response.text()
       console.error('GitHub API error:', error)
-      return NextResponse.json({ error: 'Failed to trigger workflow', details: error, status: response.status }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to trigger workflow' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, message: 'Workflow triggered' })
