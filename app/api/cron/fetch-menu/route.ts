@@ -22,7 +22,7 @@ export async function GET() {
     if (!response.ok) {
       const error = await response.text()
       console.error('GitHub API error:', error)
-      return NextResponse.json({ error: 'Failed to trigger workflow' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to trigger workflow', details: error, status: response.status }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, message: 'Workflow triggered' })
