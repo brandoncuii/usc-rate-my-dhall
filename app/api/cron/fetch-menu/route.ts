@@ -5,7 +5,8 @@ export async function GET() {
 
   // Debug: check if env var exists
   if (!pat) {
-    return NextResponse.json({ error: 'GITHUB_PAT not set' }, { status: 500 })
+    const envKeys = Object.keys(process.env).filter(k => k.includes('GIT') || k.includes('PAT') || k.includes('CRON'))
+    return NextResponse.json({ error: 'GITHUB_PAT not set', availableKeys: envKeys }, { status: 500 })
   }
 
   try {
