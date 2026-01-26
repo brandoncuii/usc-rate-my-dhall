@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
+  const pat = process.env.GITHUB_PAT
+
+  // Debug: check if env var exists
+  if (!pat) {
+    return NextResponse.json({ error: 'GITHUB_PAT not set' }, { status: 500 })
+  }
 
   try {
     // Trigger the GitHub Action workflow
@@ -10,7 +16,7 @@ export async function GET() {
         method: 'POST',
         headers: {
           'Accept': 'application/vnd.github.v3+json',
-          'Authorization': `Bearer ${process.env.GITHUB_PAT}`,
+          'Authorization': `Bearer ${pat.trim()}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
