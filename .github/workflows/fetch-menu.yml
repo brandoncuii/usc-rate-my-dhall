@@ -2,10 +2,10 @@ name: Fetch Daily Menu
 
 on:
   schedule:
-    # Run at 6am Pacific time daily
-    # 6am PST = 2pm UTC, 6am PDT = 1pm UTC
-    # Using 2pm UTC (6am PST / 7am PDT)
-    - cron: '0 14 * * *'
+    # Run at 3am Pacific time daily
+    # 3am PST = 11am UTC, 3am PDT = 10am UTC
+    # Using 11am UTC (3am PST / 4am PDT)
+    - cron: '0 11 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
