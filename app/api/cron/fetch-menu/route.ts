@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  // Verify the request is from Vercel Cron
+  // Verify the request is from Vercel Cron or authorized caller
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const url = new URL(request.url)
+  const secretParam = url.searchParams.get('secret')
+
+  const isAuthorized =
+    authHeader === `Bearer ${process.env.CRON_SECRET}` ||
+    secretParam === process.env.CRON_SECRET
+
+  if (!isAuthorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
