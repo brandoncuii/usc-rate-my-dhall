@@ -1,13 +1,14 @@
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import UserNav from '../components/UserNav'
-import StarRating from '../components/StarRating'
+import PreviousItemCard from '../components/PreviousItemCard'
 
 export const dynamic = 'force-dynamic'
 
 interface MenuItem {
   id: string
   name: string
+  ingredients: string[]
   last_served_date: string
   station: {
     name: string
@@ -38,6 +39,7 @@ export default async function PreviousMenuItems() {
     .select(`
       id,
       name,
+      ingredients,
       last_served_date,
       station:stations(
         name,
@@ -139,13 +141,14 @@ export default async function PreviousMenuItems() {
               ) : (
                 <div className="space-y-2">
                   {hallItems.map(item => (
-                    <div
+                    <PreviousItemCard
                       key={item.id}
-                      className="bg-white rounded-lg shadow-sm border border-gray-100 px-4 py-3 flex items-center justify-between"
-                    >
-                      <span className="font-medium text-gray-800">{item.name}</span>
-                      <StarRating rating={item.averageRating} count={item.ratingCount} size="sm" />
-                    </div>
+                      menuItemId={item.id}
+                      name={item.name}
+                      ingredients={item.ingredients || []}
+                      averageRating={item.averageRating}
+                      ratingCount={item.ratingCount}
+                    />
                   ))}
                 </div>
               )}
