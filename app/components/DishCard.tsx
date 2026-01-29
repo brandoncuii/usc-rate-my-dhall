@@ -30,6 +30,7 @@ export default function DishCard({
   const [ratingCount, setRatingCount] = useState(initialCount)
   const [loadingUserRating, setLoadingUserRating] = useState(false)
   const [savingComment, setSavingComment] = useState(false)
+  const [moderationError, setModerationError] = useState('')
 
   // Fetch user's existing rating and all comments
   useEffect(() => {
@@ -77,6 +78,27 @@ export default function DishCard({
   const handleSaveComment = async () => {
     if (!user || userRating === null) return
     setSavingComment(true)
+    setModerationError('')
+
+    // Check content moderation
+    if (commentDraft.trim()) {
+      try {
+        const modResponse = await fetch('/api/moderate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: commentDraft.trim() }),
+        })
+        const modResult = await modResponse.json()
+        if (modResult.flagged) {
+          setModerationError(modResult.message || 'Comment contains inappropriate content.')
+          setSavingComment(false)
+          return
+        }
+      } catch (err) {
+        console.error('Moderation check failed:', err)
+        // Continue if moderation service is unavailable
+      }
+    }
 
     const { error } = await supabaseBrowser
       .from('ratings')
@@ -176,6 +198,9 @@ export default function DishCard({
                     rows={2}
                     className="w-full text-sm border border-gray-200 rounded-md p-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#990000] focus:border-[#990000]"
                   />
+                  {moderationError && (
+                    <p className="text-xs text-red-600 mt-1">{moderationError}</p>
+                  )}
                   {commentDraft.trim() !== userComment && (
                     <button
                       onClick={handleSaveComment}
