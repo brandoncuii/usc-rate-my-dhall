@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../components/AuthProvider'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import Link from 'next/link'
-import UserNav from '../components/UserNav'
+import Header from '../components/Header'
 import StarRating from '../components/StarRating'
 
 interface RatingWithDish {
@@ -37,6 +37,7 @@ export default function MyRatings() {
     } else if (!authLoading) {
       setLoading(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading])
 
   const fetchMyRatings = async () => {
@@ -44,7 +45,8 @@ export default function MyRatings() {
 
     const { data, error } = await supabaseBrowser
       .from('ratings')
-      .select(`
+      .select(
+        `
         id,
         score,
         created_at,
@@ -58,14 +60,15 @@ export default function MyRatings() {
             dining_hall:dining_halls(name, slug)
           )
         )
-      `)
+      `,
+      )
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching ratings:', error.message)
     } else {
-      setRatings(data as unknown as RatingWithDish[] || [])
+      setRatings((data as unknown as RatingWithDish[]) || [])
     }
     setLoading(false)
   }
@@ -76,7 +79,7 @@ export default function MyRatings() {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     })
   }
 
@@ -87,13 +90,12 @@ export default function MyRatings() {
       day: 'numeric',
       year: 'numeric',
       hour: 'numeric',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   }
 
-  // Group ratings by dining hall
   const ratingsByHall: Record<string, RatingWithDish[]> = {}
-  ratings.forEach(rating => {
+  ratings.forEach((rating) => {
     const hallName = rating.menu_item?.station?.dining_hall?.name || 'Unknown'
     if (!ratingsByHall[hallName]) {
       ratingsByHall[hallName] = []
@@ -103,33 +105,16 @@ export default function MyRatings() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-[#990000] text-white py-3 px-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-2xl font-bold hover:opacity-90 transition-opacity">
-              <span className="text-[#FFCC00]">USC</span>RateMyPlate
-            </Link>
-            <span className="text-white/40">|</span>
-            <Link href="/all-menu-items" className="text-sm text-white hover:text-white/80 underline underline-offset-2 transition-colors">
-              Previous Menu Items
-            </Link>
-            <Link href="/my-ratings" className="text-sm text-white hover:text-white/80 underline underline-offset-2 transition-colors">
-              My Ratings
-            </Link>
-          </div>
-          <UserNav />
-        </div>
-      </header>
+      <Header />
 
-      {/* Subheader */}
       <div className="bg-gray-100 border-b px-6 py-2">
         <div className="max-w-4xl mx-auto">
-          <p className="text-gray-600 text-sm">My Ratings • Your rating history across all dining halls</p>
+          <p className="text-gray-600 text-sm">
+            My Ratings &bull; Your rating history across all dining halls
+          </p>
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-4xl mx-auto p-6">
         {authLoading || loading ? (
           <div className="text-center py-12">
@@ -138,21 +123,15 @@ export default function MyRatings() {
         ) : !user ? (
           <div className="text-center py-12">
             <p className="text-gray-600 mb-4">Sign in to view your rating history</p>
-            <Link
-              href="/"
-              className="text-[#990000] hover:underline font-medium"
-            >
+            <Link href="/" className="text-[#990000] hover:underline font-medium">
               Go to Home to Sign In
             </Link>
           </div>
         ) : ratings.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">You haven't rated any dishes yet</p>
-            <Link
-              href="/"
-              className="text-[#990000] hover:underline font-medium"
-            >
-              Browse Today's Menu
+            <p className="text-gray-600 mb-4">You haven&apos;t rated any dishes yet</p>
+            <Link href="/" className="text-[#990000] hover:underline font-medium">
+              Browse Today&apos;s Menu
             </Link>
           </div>
         ) : (
@@ -171,7 +150,7 @@ export default function MyRatings() {
                 </h2>
 
                 <div className="space-y-3">
-                  {hallRatings.map(rating => (
+                  {hallRatings.map((rating) => (
                     <div
                       key={rating.id}
                       className="bg-white rounded-lg shadow-sm border border-gray-100 p-4"
@@ -189,7 +168,12 @@ export default function MyRatings() {
                           </p>
                         </div>
                         <div className="text-right text-xs text-gray-400">
-                          <p>Last served: {rating.menu_item?.last_served_date ? formatDate(rating.menu_item.last_served_date + 'T00:00:00') : 'N/A'}</p>
+                          <p>
+                            Last served:{' '}
+                            {rating.menu_item?.last_served_date
+                              ? formatDate(rating.menu_item.last_served_date + 'T00:00:00')
+                              : 'N/A'}
+                          </p>
                           <p>Rated: {formatTimestamp(rating.updated_at)}</p>
                         </div>
                       </div>
@@ -201,9 +185,8 @@ export default function MyRatings() {
           </>
         )}
 
-        {/* Footer */}
         <div className="mt-8 pt-6 border-t text-center text-gray-500 text-sm">
-          <p>USC RateMyPlate • Your personal rating history</p>
+          <p>USC RateMyPlate &bull; Your personal rating history</p>
         </div>
       </div>
     </main>

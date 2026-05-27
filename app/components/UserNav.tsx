@@ -31,14 +31,20 @@ export default function UserNav() {
     <>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => { setAuthMode('signin'); setShowAuthModal(true) }}
+          onClick={() => {
+            setAuthMode('signin')
+            setShowAuthModal(true)
+          }}
           className="text-sm text-white hover:text-white/80 transition-colors"
         >
           Sign In
         </button>
         <span className="text-white/40">|</span>
         <button
-          onClick={() => { setAuthMode('signup'); setShowAuthModal(true) }}
+          onClick={() => {
+            setAuthMode('signup')
+            setShowAuthModal(true)
+          }}
           className="text-sm bg-white text-[#990000] px-3 py-1 rounded font-medium hover:bg-gray-100 transition-colors"
         >
           Sign Up

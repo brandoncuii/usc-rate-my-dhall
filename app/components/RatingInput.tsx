@@ -26,9 +26,7 @@ export default function RatingInput({ onRate, currentRating, disabled }: RatingI
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-500">
-        {currentRating ? 'Your rating:' : 'Rate this:'}
-      </span>
+      <span className="text-xs text-gray-500">{currentRating ? 'Your rating:' : 'Rate this:'}</span>
       <div className="flex">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
@@ -53,9 +51,7 @@ export default function RatingInput({ onRate, currentRating, disabled }: RatingI
           </button>
         ))}
       </div>
-      {isSubmitting && (
-        <span className="text-xs text-gray-400">Saving...</span>
-      )}
+      {isSubmitting && <span className="text-xs text-gray-400">Saving...</span>}
     </div>
   )
 }

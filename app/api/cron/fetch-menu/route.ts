@@ -14,14 +14,14 @@ export async function GET(request: Request) {
       {
         method: 'POST',
         headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'Authorization': `Bearer ${process.env.GITHUB_PAT}`,
+          Accept: 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${process.env.GITHUB_PAT}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ref: 'main'
-        })
-      }
+          ref: 'main',
+        }),
+      },
     )
 
     if (!response.ok) {

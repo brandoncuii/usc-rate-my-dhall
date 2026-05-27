@@ -4,7 +4,7 @@ import {
   STATION_NAMES,
   MEAL_PERIODS,
   SKIP_PATTERNS,
-  DEBUG
+  DEBUG,
 } from './config'
 
 interface ParseState {
@@ -23,7 +23,7 @@ function createDish(config: DiningHallConfig, state: ParseState): ScrapedDish | 
     station: config.stationSlug,
     dishName: state.currentDish.name,
     ingredients: state.currentDish.ingredients,
-    mealPeriod: state.currentMeal
+    mealPeriod: state.currentMeal,
   }
 }
 
@@ -31,21 +31,29 @@ function isStationHeader(line: string, upperLine: string, config: DiningHallConf
   const isAllCaps = line === upperLine
   if (!isAllCaps) return false
 
-  const matchesKnownStation = STATION_NAMES.some(s => upperLine === s || upperLine.startsWith(s + ' '))
+  const matchesKnownStation = STATION_NAMES.some(
+    (s) => upperLine === s || upperLine.startsWith(s + ' '),
+  )
   const isEvkBar = config.slug === 'evk' && upperLine.endsWith(' BAR')
 
   return matchesKnownStation || isEvkBar
 }
 
 function shouldSkipLine(line: string): boolean {
-  return SKIP_PATTERNS.some(p => p.test(line))
+  return SKIP_PATTERNS.some((p) => p.test(line))
 }
 
-function isTargetStation(upperLine: string, config: DiningHallConfig): { isTarget: boolean; isEvkBar: boolean } {
+function isTargetStation(
+  upperLine: string,
+  config: DiningHallConfig,
+): { isTarget: boolean; isEvkBar: boolean } {
   if (config.slug === 'evk') {
     const isBarSection = upperLine.endsWith(' BAR') || upperLine === 'BAR'
-    const isExcludedBar = upperLine.includes('SALAD') || upperLine.includes('DELI') ||
-                          upperLine.includes('WAFFLE') || upperLine.includes('BREAKFAST')
+    const isExcludedBar =
+      upperLine.includes('SALAD') ||
+      upperLine.includes('DELI') ||
+      upperLine.includes('WAFFLE') ||
+      upperLine.includes('BREAKFAST')
     return { isTarget: isBarSection && !isExcludedBar, isEvkBar: true }
   }
   return { isTarget: upperLine === config.stationName, isEvkBar: false }
@@ -57,7 +65,7 @@ export function parseMenuText(lines: string[], config: DiningHallConfig): Scrape
     currentMeal: null,
     inTargetStation: false,
     currentDish: null,
-    foundDishName: false
+    foundDishName: false,
   }
 
   for (const line of lines) {
@@ -102,7 +110,8 @@ export function parseMenuText(lines: string[], config: DiningHallConfig): Scrape
 
     // If we're in target station and it's lunch or dinner, capture dish and ingredients
     if (!state.inTargetStation) continue
-    if (!state.currentMeal || (state.currentMeal !== 'lunch' && state.currentMeal !== 'dinner')) continue
+    if (!state.currentMeal || (state.currentMeal !== 'lunch' && state.currentMeal !== 'dinner'))
+      continue
     if (shouldSkipLine(line)) continue
 
     // First non-station line after EXPO/BISTRO is the dish name (EVK already has it)

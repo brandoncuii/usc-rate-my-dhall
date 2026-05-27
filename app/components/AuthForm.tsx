@@ -89,13 +89,9 @@ export default function AuthForm({ initialMode = 'signin' }: AuthFormProps) {
           />
         </div>
 
-        {error && (
-          <p className="text-red-600 text-sm">{error}</p>
-        )}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
 
-        {message && (
-          <p className="text-green-600 text-sm">{message}</p>
-        )}
+        {message && <p className="text-green-600 text-sm">{message}</p>}
 
         <button
           type="submit"
@@ -109,9 +105,13 @@ export default function AuthForm({ initialMode = 'signin' }: AuthFormProps) {
       <p className="mt-4 text-center text-sm text-gray-600">
         {mode === 'signin' ? (
           <>
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <button
-              onClick={() => { setMode('signup'); setError(null); setMessage(null) }}
+              onClick={() => {
+                setMode('signup')
+                setError(null)
+                setMessage(null)
+              }}
               className="text-[#990000] font-medium hover:underline"
             >
               Sign Up
@@ -121,7 +121,11 @@ export default function AuthForm({ initialMode = 'signin' }: AuthFormProps) {
           <>
             Already have an account?{' '}
             <button
-              onClick={() => { setMode('signin'); setError(null); setMessage(null) }}
+              onClick={() => {
+                setMode('signin')
+                setError(null)
+                setMessage(null)
+              }}
               className="text-[#990000] font-medium hover:underline"
             >
               Sign In
@@ -130,9 +134,7 @@ export default function AuthForm({ initialMode = 'signin' }: AuthFormProps) {
         )}
       </p>
 
-      <p className="mt-3 text-center text-xs text-gray-500">
-        Only @usc.edu emails are allowed
-      </p>
+      <p className="mt-3 text-center text-xs text-gray-500">Only @usc.edu emails are allowed</p>
     </div>
   )
 }

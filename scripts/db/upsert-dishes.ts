@@ -5,7 +5,7 @@ import { getPacificDateISO } from '../utils/date'
 async function getOrCreateStation(
   supabase: SupabaseClient,
   hallId: string,
-  config: DiningHallConfig
+  config: DiningHallConfig,
 ): Promise<string | null> {
   // Try to get existing station
   const { data: station } = await supabase
@@ -23,7 +23,7 @@ async function getOrCreateStation(
     .insert({
       dining_hall_id: hallId,
       name: config.stationName,
-      slug: config.stationSlug
+      slug: config.stationSlug,
     })
     .select('id')
     .single()
@@ -39,7 +39,7 @@ async function getOrCreateStation(
 
 function deduplicateDishes(dishes: ScrapedDish[]): ScrapedDish[] {
   const uniqueDishes = new Map<string, ScrapedDish>()
-  dishes.forEach(dish => {
+  dishes.forEach((dish) => {
     // Keep the first occurrence (lunch takes priority over dinner)
     if (!uniqueDishes.has(dish.dishName)) {
       uniqueDishes.set(dish.dishName, dish)
@@ -72,25 +72,26 @@ export async function insertDishes(supabase: SupabaseClient, dishes: ScrapedDish
     if (!stationId) continue
 
     // Get unique dishes for this dining hall
-    const hallDishes = dishes.filter(d => d.diningHall === hallConfig.slug)
+    const hallDishes = dishes.filter((d) => d.diningHall === hallConfig.slug)
     const uniqueDishes = deduplicateDishes(hallDishes)
 
     let inserted = 0
 
     for (const dish of uniqueDishes) {
-      const { error } = await supabase
-        .from('menu_items')
-        .upsert({
+      const { error } = await supabase.from('menu_items').upsert(
+        {
           station_id: stationId,
           name: dish.dishName,
           last_served_date: today,
           meal_period: 'lunch',
           dietary_tags: [],
           allergens: [],
-          ingredients: dish.ingredients
-        }, {
-          onConflict: 'station_id,name,meal_period'
-        })
+          ingredients: dish.ingredients,
+        },
+        {
+          onConflict: 'station_id,name,meal_period',
+        },
+      )
 
       if (error) {
         console.log(`Failed to insert ${dish.dishName}: ${error.message}`)
