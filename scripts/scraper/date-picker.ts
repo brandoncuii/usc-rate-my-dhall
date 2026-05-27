@@ -30,7 +30,7 @@ export async function setDateToToday(page: Page): Promise<void> {
 
     // Try to click "Today" button if it exists
     const todayButton = page.getByText('Today', { exact: true })
-    if (await todayButton.count() > 0) {
+    if ((await todayButton.count()) > 0) {
       await todayButton.first().click()
       console.log('Clicked "Today" button')
       await page.waitForTimeout(1000)
@@ -50,7 +50,6 @@ export async function setDateToToday(page: Page): Promise<void> {
 
     const newValue = await dateInput.inputValue()
     console.log(`Date value after update: ${newValue}`)
-
   } catch (error) {
     console.log('Error interacting with date picker:', error)
   }

@@ -8,11 +8,24 @@ dotenv.config({ path: '.env.local' })
 
 async function main() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing Supabase credentials')
+  if (!supabaseUrl) {
+    console.error('Missing NEXT_PUBLIC_SUPABASE_URL')
     process.exit(1)
+  }
+
+  const supabaseKey = serviceRoleKey || anonKey
+  if (!supabaseKey) {
+    console.error('Missing SUPABASE_SERVICE_ROLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY fallback)')
+    process.exit(1)
+  }
+
+  if (!serviceRoleKey) {
+    console.warn(
+      'WARNING: Using anon key for writes. Set SUPABASE_SERVICE_ROLE_KEY for proper security.',
+    )
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey)
@@ -27,8 +40,10 @@ async function main() {
 
     console.log(`\n========== SUMMARY ==========`)
     console.log(`Total dishes scraped: ${dishes.length}`)
-    dishes.forEach(d => {
-      console.log(`  ${d.diningHall} - ${d.mealPeriod}: ${d.dishName} (${d.ingredients.length} ingredients)`)
+    dishes.forEach((d) => {
+      console.log(
+        `  ${d.diningHall} - ${d.mealPeriod}: ${d.dishName} (${d.ingredients.length} ingredients)`,
+      )
     })
 
     if (dishes.length > 0) {
@@ -36,7 +51,6 @@ async function main() {
     }
 
     console.log('\nDone!')
-
   } catch (error) {
     console.error('Error:', error)
     process.exit(1)

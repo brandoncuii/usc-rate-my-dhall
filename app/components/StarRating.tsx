@@ -1,8 +1,8 @@
 'use client'
 
 interface StarRatingProps {
-  rating: number  // 0-5, can be decimal
-  count?: number  // number of reviews
+  rating: number // 0-5, can be decimal
+  count?: number // number of reviews
   size?: 'sm' | 'md' | 'lg'
 }
 
@@ -10,20 +10,18 @@ export default function StarRating({ rating, count, size = 'md' }: StarRatingPro
   const sizeClasses = {
     sm: 'w-3 h-3',
     md: 'w-4 h-4',
-    lg: 'w-5 h-5'
+    lg: 'w-5 h-5',
   }
 
   const textSizes = {
     sm: 'text-xs',
     md: 'text-sm',
-    lg: 'text-base'
+    lg: 'text-base',
   }
 
   return (
     <div className="flex items-center gap-1">
-      <span className={`font-medium text-gray-700 ${textSizes[size]}`}>
-        {rating.toFixed(1)}
-      </span>
+      <span className={`font-medium text-gray-700 ${textSizes[size]}`}>{rating.toFixed(1)}</span>
       <div className="flex">
         {[1, 2, 3, 4, 5].map((star) => {
           const filled = star <= Math.floor(rating)
@@ -57,11 +55,7 @@ export default function StarRating({ rating, count, size = 'md' }: StarRatingPro
           )
         })}
       </div>
-      {count !== undefined && (
-        <span className={`text-gray-500 ${textSizes[size]}`}>
-          ({count})
-        </span>
-      )}
+      {count !== undefined && <span className={`text-gray-500 ${textSizes[size]}`}>({count})</span>}
     </div>
   )
 }

@@ -3,7 +3,10 @@ import { DiningHallConfig, ScrapedDish, MENU_URL, DINING_HALLS, DEBUG } from './
 import { parseMenuText } from './parser'
 import { setDateToToday } from './date-picker'
 
-export async function scrapeDiningHall(page: Page, config: DiningHallConfig): Promise<ScrapedDish[]> {
+export async function scrapeDiningHall(
+  page: Page,
+  config: DiningHallConfig,
+): Promise<ScrapedDish[]> {
   console.log(`\n========== ${config.name} ==========`)
 
   // Click on dining hall tab
@@ -17,14 +20,22 @@ export async function scrapeDiningHall(page: Page, config: DiningHallConfig): Pr
 
   // Get page text and split into lines
   const pageText = await page.evaluate(() => document.body.innerText)
-  const lines = pageText.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+  const lines = pageText
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0)
 
   // Debug logging for key sections
   if (DEBUG && (config.slug === 'village' || config.slug === 'evk')) {
     console.log(`\n[DEBUG ${config.slug}] Looking for key sections:`)
     lines.forEach((line, idx) => {
       const upper = line.toUpperCase()
-      if (upper.includes('EXPO') || upper.includes('BAR') || upper === 'LUNCH' || upper === 'DINNER') {
+      if (
+        upper.includes('EXPO') ||
+        upper.includes('BAR') ||
+        upper === 'LUNCH' ||
+        upper === 'DINNER'
+      ) {
         console.log(`  [${idx}] ${line}`)
       }
     })
